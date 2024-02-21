@@ -28,6 +28,7 @@ async function run() {
     await client.connect();
 
     const database = client.db("ClothingStore").collection("itemsCollection");
+    const myCart = client.db("ClothingStore").collection("usersCart");
 
     app.get('/', async(req, res)=>{
         const result = await database.find().toArray();
@@ -38,6 +39,22 @@ async function run() {
         const id = req.params.id;
         const query = {_id: new ObjectId(id)}
         const result = await database.findOne(query);
+        res.send(result)
+    })
+    app.get('/myCart', async(req, res)=>{
+        const email = req.params.email;
+        let query = {};
+        if(req.query?.email){
+            query={email: email }
+        }
+        const result = await myCart.find(query).toArray();
+        res.send(result)
+    })
+
+    app.post('/addToCart', async(req, res)=>{
+        const cartItem = req.body;
+        
+        const result = await myCart.insertOne(cartItem);
         res.send(result)
     })
 
