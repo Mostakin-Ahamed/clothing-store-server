@@ -28,10 +28,19 @@ async function run() {
     await client.connect();
 
     const database = client.db("ClothingStore").collection("itemsCollection");
-    const myCart = client.db("ClothingStore").collection("usersCart");
+    const myCartDB = client.db("ClothingStore").collection("usersCart");
 
-    app.get('/', async(req, res)=>{
+    app.get('/items', async(req, res)=>{
         const result = await database.find().toArray();
+        res.send(result)
+    })
+    app.get('/cartItems', async(req, res)=>{
+        const email = req.query.email;
+            let query ={};
+            if(req.query?.email){
+                query={email: email}
+            }
+        const result = await myCartDB.find(query).toArray();
         res.send(result)
     })
 
@@ -41,22 +50,18 @@ async function run() {
         const result = await database.findOne(query);
         res.send(result)
     })
-    app.get('/myCart', async(req, res)=>{
-        const email = req.params.email;
-        let query = {};
-        if(req.query?.email){
-            query={email: email }
-        }
-        const result = await myCart.find(query).toArray();
+    app.post('/addToCart', async(req, res)=>{
+        const cartItem = req.body;
+        const result = await myCartDB.insertOne(cartItem);
+        res.send(result)
+    })
+    app.post('/addItem', async(req, res)=>{
+        const newItem = req.body;
+        const result = await database.insertOne(newItem);
         res.send(result)
     })
 
-    app.post('/addToCart', async(req, res)=>{
-        const cartItem = req.body;
-        
-        const result = await myCart.insertOne(cartItem);
-        res.send(result)
-    })
+    
 
 
     // Send a ping to confirm a successful connection
@@ -69,9 +74,9 @@ async function run() {
 run().catch(console.dir);
 
 
-// app.get('/', (req, res)=>{
-//     res.send('clothing store server is running')
-// })
+app.get('/', (req, res)=>{
+    res.send('clothing store server is running')
+})
 
 app.listen(port, ()=>{
     console.log(`clothing store server is running on port ${port}`);
